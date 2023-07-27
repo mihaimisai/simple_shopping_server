@@ -84,21 +84,29 @@ def add_data():
     return jsonify({"error": str(error)})
 
 
-@app.route("/delete/<item>", methods=['DELETE'])
-def delete(item_id):
+@app.route("/delete/", methods=['DELETE'])
+def delete():
   try:
-    print("Delete data route reached")
+    #print("Delete data route reached")
     user_id = session.get('user_id')
     if not user_id:
       return jsonify({"error": "User not logged in."})
 
-    item = request.get_json()
-    print(item)
-    result = collection.delete_one({"_id": item_id})
-    if result.deleted_count == 0:
-      print(f"Item with ID {item_id} not found.")
-      return jsonify({"error": "Item not found."})
-    #print(f"Item with ID {item_id} deleted.")
+    data = request.get_json()
+    item_to_delete = data.get('itemName')
+    #print(item_to_delete)
+
+    user_id = ObjectId(user_id)
+    user = collection.find_one({"_id": user_id})
+    new_item_list = user['items']
+    #print(new_item_list)
+    new_item_list.remove(item_to_delete)
+    #print(new_item_list)
+
+    collection.update_one(
+        {'_id': ObjectId(user_id)},
+        {'$set': { 'items': new_item_list}})
+
     return jsonify({"message": "Item deleted."})
   except Exception as error:
     print(f"Error deleting item: {str(error)}")
