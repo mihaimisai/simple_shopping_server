@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request, session
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 import os
+from flask_cors import CORS
 
 dbPass = os.environ['dbPass']
 
@@ -12,6 +13,7 @@ db = cluster['test']
 collection = db['test1']
 
 app = Flask(__name__)
+CORS(app)
 app.config['SECRET_KEY'] = os.environ['secret']
 
 #confirm a successful connection
@@ -103,9 +105,10 @@ def delete():
     new_item_list.remove(item_to_delete)
     #print(new_item_list)
 
-    collection.update_one(
-        {'_id': ObjectId(user_id)},
-        {'$set': { 'items': new_item_list}})
+    collection.update_one({'_id': ObjectId(user_id)},
+                          {'$set': {
+                            'items': new_item_list
+                          }})
 
     return jsonify({"message": "Item deleted."})
   except Exception as error:
@@ -183,6 +186,12 @@ def logout():
     return jsonify({"logged_in": False})
   except Exception as error:
     return jsonify({"error": str(error)})
+
+
+@app.route('/api')
+def flask_status():
+
+  return jsonify('Flask is up')
 
 
 if __name__ == "__main__":
